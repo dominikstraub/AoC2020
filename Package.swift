@@ -25,7 +25,9 @@ let package = Package(
             dependencies: ["Day1"]),
         .target(
             name: "Day2",
-            dependencies: []),
+            dependencies: ["Utils"],
+            resources: [.process("input.txt"), .process("test.txt")]
+        ),
         .testTarget(
             name: "Day2Tests",
             dependencies: ["Day2"]),

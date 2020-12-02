@@ -5,11 +5,11 @@ import Utils
 let input = try Utils.getInput(day: 1)
 
 let items = input
-.components(separatedBy: CharacterSet(charactersIn: ", \n"))
-.map { (item) -> Int? in
-    return Int(item)
-}
-.compactMap { $0 }
+    .components(separatedBy: CharacterSet(charactersIn: ", \n"))
+    .map { (item) -> Int? in
+        return Int(item)
+    }
+    .compactMap { $0 }
 
 func part1(items: [Int]) -> Int {
     let length = items.count
