@@ -5,7 +5,7 @@ import Utils
 let input = try Utils.getInput(day: 2)
 
 let items = input
-    .components(separatedBy: CharacterSet(charactersIn: ",\n"))
+    .components(separatedBy: CharacterSet(charactersIn: "\n"))
     .map { (item) -> (Int, Int, Character, String)? in
         let parts = item.components(separatedBy: CharacterSet(charactersIn: "- :"))
         if parts.count < 4 { return nil }

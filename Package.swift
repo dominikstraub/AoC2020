@@ -20,16 +20,15 @@ let package = Package(
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
-        .testTarget(
-            name: "Day1Tests",
-            dependencies: ["Day1"]),
         .target(
             name: "Day2",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
-        .testTarget(
-            name: "Day2Tests",
-            dependencies: ["Day2"]),
+        .target(
+            name: "Day3",
+            dependencies: ["Utils"],
+            resources: [.process("input.txt"), .process("test.txt")]
+        ),
     ]
 )
