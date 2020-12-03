@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-// let input = try Utils.getInput(day: 1, file: "test.txt")
-let input = try Utils.getInput(day: 1)
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+let input = try Utils.getInput(bundle: Bundle.module)
 
 let items = input
     .components(separatedBy: CharacterSet(charactersIn: ", \n"))

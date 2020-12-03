@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-// let input = try Utils.getInput(day: 3, file: "test.txt")
-let input = try Utils.getInput(day: 3)
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+let input = try Utils.getInput(bundle: Bundle.module)
 
 let field = input
     .components(separatedBy: CharacterSet(charactersIn: "\n"))
@@ -23,11 +23,10 @@ func part1(field: [[Bool]], slope: Double = 3) -> Int {
             continue
         }
         let line = field[i]
-        if line[Int(s) % line.count] == true  {
+        if line[Int(s) % line.count] == true {
             trees += 1
         }
     }
-    
     return trees
 }
 
