@@ -27,11 +27,14 @@ func rowColumn(ofPass pass: String) -> (row: Int, column: Int) {
     return (row: minRow, column: minColumn)
 }
 
+var passes = [Int: Bool]()
+
 func part1(boardingPasses: [String]) -> Int {
     var highestPass = -1
     for pass in boardingPasses {
         let position = rowColumn(ofPass: pass)
         let seatId = position.row * 8 + position.column
+        passes[seatId] = true
         if seatId > highestPass {
             highestPass = seatId
         }
@@ -41,13 +44,7 @@ func part1(boardingPasses: [String]) -> Int {
 
 print("Part 1: \(part1(boardingPasses: boardingPasses))")
 
-func part2(boardingPasses: [String]) -> Int {
-    var passes = [Int: Bool]()
-    for pass in boardingPasses {
-        let position = rowColumn(ofPass: pass)
-        let seatId = position.row * 8 + position.column
-        passes[seatId] = true
-    }
+func part2() -> Int {
     for pass in passes {
         if passes[pass.key - 1] != true && passes[pass.key - 2] == true {
             return pass.key - 1
@@ -59,4 +56,4 @@ func part2(boardingPasses: [String]) -> Int {
     return -1
 }
 
-print("Part 2: \(part2(boardingPasses: boardingPasses))")
+print("Part 2: \(part2())")
