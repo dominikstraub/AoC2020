@@ -18,7 +18,7 @@ func part1(items: [(first: Int, second: Int, letter: Character, password: String
     var validCount = 0
     for entry in items {
         let letterCount = entry.password.filter { $0 == entry.letter }.count
-        if letterCount >= entry.first && letterCount <= entry.second {
+        if letterCount >= entry.first, letterCount <= entry.second {
             validCount += 1
         }
     }

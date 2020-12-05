@@ -83,8 +83,8 @@ func part2(passports: [[String: String]]) -> Int {
 
         if let hgt = passport["hgt"] {
             let split = hgt.index(hgt.endIndex, offsetBy: -2)
-            let unit = hgt[split..<hgt.endIndex]
-            guard let value = Int(hgt[hgt.startIndex..<split]) else { valid = false; continue }
+            let unit = hgt[split ..< hgt.endIndex]
+            guard let value = Int(hgt[hgt.startIndex ..< split]) else { valid = false; continue }
             if unit == "cm" {
                 if value < 150 || value > 193 {
                     valid = false

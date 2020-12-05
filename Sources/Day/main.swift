@@ -8,14 +8,14 @@ let items = input
     .components(separatedBy: CharacterSet(charactersIn: "\n"))
     .compactMap { $0 }
 
-func part1(items: [String]) -> Int {
-    return -1
+func part1(items _: [String]) -> Int {
+    -1
 }
 
 print("Part 1: \(part1(items: items))")
 
-func part2(items: [String]) -> Int {
-    return -1
+func part2(items _: [String]) -> Int {
+    -1
 }
 
 print("Part 2: \(part2(items: items))")

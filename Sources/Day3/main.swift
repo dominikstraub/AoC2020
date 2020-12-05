@@ -17,7 +17,7 @@ let field = input
 
 func part1(field: [[Bool]], slope: Double = 3) -> Int {
     var trees = 0
-    for i in 0..<field.count {
+    for i in 0 ..< field.count {
         let s = Double(i) * slope
         if s.truncatingRemainder(dividingBy: 1) != 0 {
             continue

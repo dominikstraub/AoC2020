@@ -46,10 +46,10 @@ print("Part 1: \(part1(boardingPasses: boardingPasses))")
 
 func part2() -> Int {
     for pass in passes {
-        if passes[pass.key - 1] != true && passes[pass.key - 2] == true {
+        if passes[pass.key - 1] != true, passes[pass.key - 2] == true {
             return pass.key - 1
         }
-        if passes[pass.key + 1] != true && passes[pass.key + 2] == true {
+        if passes[pass.key + 1] != true, passes[pass.key + 2] == true {
             return pass.key + 1
         }
     }
