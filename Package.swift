@@ -14,7 +14,8 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "Utils",
-            dependencies: []),
+            dependencies: []
+        ),
         .target(
             name: "Day1",
             dependencies: ["Utils"],
@@ -37,6 +38,11 @@ let package = Package(
         ),
         .target(
             name: "Day5",
+            dependencies: ["Utils"],
+            resources: [.process("input.txt"), .process("test.txt")]
+        ),
+        .target(
+            name: "Day6",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
