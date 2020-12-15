@@ -1,12 +1,6 @@
 import Foundation
 import Utils
 
-precedencegroup PowerPrecedence { higherThan: MultiplicationPrecedence }
-infix operator ^^: PowerPrecedence
-func ^^ (radix: Int, power: Int) -> Int {
-    return Int(pow(Double(radix), Double(power)))
-}
-
 struct Instruction {
     var isMask = false
     var mask = ""

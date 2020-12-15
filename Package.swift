@@ -17,47 +17,47 @@ let package = Package(
             dependencies: []
         ),
         .target(
-            name: "Day1",
+            name: "Day01",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day2",
+            name: "Day02",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day3",
+            name: "Day03",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day4",
+            name: "Day04",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day5",
+            name: "Day05",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day6",
+            name: "Day06",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day7",
+            name: "Day07",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt"), .process("test2.txt")]
         ),
         .target(
-            name: "Day8",
+            name: "Day08",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
         .target(
-            name: "Day9",
+            name: "Day09",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),
@@ -88,6 +88,11 @@ let package = Package(
         ),
         .target(
             name: "Day15",
+            dependencies: ["Utils"],
+            resources: [.process("input.txt"), .process("test.txt")]
+        ),
+        .target(
+            name: "Day16",
             dependencies: ["Utils"],
             resources: [.process("input.txt"), .process("test.txt")]
         ),

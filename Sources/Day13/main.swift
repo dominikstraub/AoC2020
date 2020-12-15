@@ -50,16 +50,6 @@ func part1() -> Int {
 
 print("Part 1: \(part1())")
 
-// modulo in swift can return negative numbers, so we make our own modulo operator
-infix operator %%
-extension Int {
-    static func %% (_ lhs: Int, _ rhs: Int) -> Int {
-        if lhs >= 0 { return lhs % rhs }
-        if lhs >= -rhs { return (lhs + rhs) }
-        return ((lhs % rhs) + rhs) % rhs
-    }
-}
-
 // extended Euclidean algorithm
 func euclid(_ m: Int, _ n: Int) -> (Int, Int) {
     if m % n == 0 {
