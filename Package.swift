@@ -94,7 +94,7 @@ let package = Package(
         .target(
             name: "Day16",
             dependencies: ["Utils"],
-            resources: [.process("input.txt"), .process("test.txt")]
+            resources: [.process("input.txt"), .process("test.txt"), .process("test2.txt")]
         ),
     ]
 )
