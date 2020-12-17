@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-// let input = try Utils.getInput(bundle: Bundle.module, file: "input")
-let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+let input = try Utils.getInput(bundle: Bundle.module, file: "input")
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
 
 let lines = input.components(separatedBy: "\n")
     .map { line -> String? in
@@ -13,71 +13,53 @@ let lines = input.components(separatedBy: "\n")
     }
     .compactMap { $0 }
 
-var grid: [Int: [Int: [Int: Bool]]] = [0: [:]]
+var coords: [Int: [Int: [Int: [Int: Bool]]]] = [0: [0: [:]]]
 for lineIndex in 0 ..< lines.count {
     let line = lines[lineIndex]
     var map: [Int: Bool] = [:]
     for columnIndex in 0 ..< line.count {
         map[columnIndex] = Bool(line[columnIndex] == "#")
     }
-    grid[0]![lineIndex] = map
+    coords[0]![0]![lineIndex] = map
 }
 
-func activeNeighbors(_ grid: [Int: [Int: [Int: Bool]]], _ z: Int, _ y: Int, _ x: Int) -> Int {
-    let slopes = [
-        (-1, -1, -1),
-        (-1, -1, 0),
-        (-1, -1, +1),
-        (-1, 0, -1),
-        (-1, 0, 0),
-        (-1, 0, +1),
-        (-1, +1, -1),
-        (-1, +1, 0),
-        (-1, +1, +1),
-        (0, -1, -1),
-        (0, -1, 0),
-        (0, -1, +1),
-        (0, 0, -1),
-        (0, 0, +1),
-        (0, +1, -1),
-        (0, +1, 0),
-        (0, +1, +1),
-        (+1, -1, -1),
-        (+1, -1, 0),
-        (+1, -1, +1),
-        (+1, 0, -1),
-        (+1, 0, 0),
-        (+1, 0, +1),
-        (+1, +1, -1),
-        (+1, +1, 0),
-        (+1, +1, +1),
-    ]
-    return slopes.reduce(0) { $0 + (grid[z + $1.0]?[y + $1.1]?[x + $1.2] == true ? 1 : 0) }
-}
-
-func setCube(_ grid: [Int: [Int: [Int: Bool]]], _ z: Int, _ y: Int, _ x: Int, _ active: Bool) -> [Int: [Int: [Int: Bool]]] {
-    if !active, grid[z]?[y]?[x] != true { return grid }
-    var grid = grid
-    if grid[z] == nil {
-        grid[z] = [:]
+func getMin(_ w: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: [Int: Bool]]] {
+    var cube = coords[w]
+    if cube == nil {
+        for (_, currentCube) in coords {
+            if cube == nil || cube!.keys.min()! > currentCube.keys.min()! {
+                cube = currentCube
+            }
+        }
     }
-    if grid[z]![y] == nil {
-        grid[z]![y] = [:]
+    return cube!
+}
+
+func getMax(_ w: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: [Int: Bool]]] {
+    var cube = coords[w]
+    if cube == nil {
+        for (_, currentCube) in coords {
+            if cube == nil || cube!.keys.max()! < currentCube.keys.max()! {
+                cube = currentCube
+            }
+        }
     }
-    grid[z]![y]![x] = active
-    return grid
+    return cube!
 }
 
-func nextState(_ grid: [Int: [Int: [Int: Bool]]], _ z: Int, _ y: Int, _ x: Int) -> Bool {
-    let neighbors = activeNeighbors(grid, z, y, x)
-    let active = grid[z]?[y]?[x] == true
-    return (active && (neighbors == 2 || neighbors == 3)) || (!active && neighbors == 3)
+func getMin(_ w: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMin(w, coords).keys.min()!
 }
 
-func getMin(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
-    var plane = grid[z]
+func getMax(_ w: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMax(w, coords).keys.max()!
+}
+
+func getMin(_ w: Int, _ z: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: Bool]] {
+    let cube: [Int: [Int: [Int: Bool]]] = getMin(w, coords)
+    var plane = cube[z]
     if plane == nil {
-        for (_, currentPlane) in grid {
+        for (_, currentPlane) in cube {
             if plane == nil || plane!.keys.min()! > currentPlane.keys.min()! {
                 plane = currentPlane
             }
@@ -86,10 +68,11 @@ func getMin(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
     return plane!
 }
 
-func getMax(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
-    var plane = grid[z]
+func getMax(_ w: Int, _ z: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: Bool]] {
+    let cube: [Int: [Int: [Int: Bool]]] = getMax(w, coords)
+    var plane = cube[z]
     if plane == nil {
-        for (_, currentPlane) in grid {
+        for (_, currentPlane) in cube {
             if plane == nil || plane!.keys.max()! < currentPlane.keys.max()! {
                 plane = currentPlane
             }
@@ -98,16 +81,16 @@ func getMax(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
     return plane!
 }
 
-func getMin(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return getMin(z, grid).keys.min()!
+func getMin(_ w: Int, _ z: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMin(w, z, coords).keys.min()!
 }
 
-func getMax(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return getMax(z, grid).keys.max()!
+func getMax(_ w: Int, _ z: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMax(w, z, coords).keys.max()!
 }
 
-func getMin(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool] {
-    let plane: [Int: [Int: Bool]] = getMin(z, grid)
+func getMin(_ w: Int, _ z: Int, _ y: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: Bool] {
+    let plane: [Int: [Int: Bool]] = getMin(w, z, coords)
     var line = plane[y]
     if line == nil {
         for (_, currentPlane) in plane {
@@ -119,8 +102,8 @@ func getMin(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool
     return line!
 }
 
-func getMax(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool] {
-    let plane: [Int: [Int: Bool]] = getMax(z, grid)
+func getMax(_ w: Int, _ z: Int, _ y: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: Bool] {
+    let plane: [Int: [Int: Bool]] = getMax(w, z, coords)
     var line = plane[y]
     if line == nil {
         for (_, currentPlane) in plane {
@@ -132,32 +115,167 @@ func getMax(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool
     return line!
 }
 
-func getMin(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return getMin(z, y, grid).keys.min()!
+func getMin(_ w: Int, _ z: Int, _ y: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMin(w, z, y, coords).keys.min()!
 }
 
-func getMax(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return getMax(z, y, grid).keys.max()!
+func getMax(_ w: Int, _ z: Int, _ y: Int, _ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
+    return getMax(w, z, y, coords).keys.max()!
 }
 
-func runCycle(_ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: [Int: Bool]]] {
-    var nextGrid: [Int: [Int: [Int: Bool]]] = [:]
-    for zIndex in grid.keys.min()! - 1 ... grid.keys.max()! + 1 {
-        for yIndex in getMin(zIndex, grid) - 1 ... getMax(zIndex, grid) + 1 {
-            for xIndex in getMin(zIndex, yIndex, grid) - 1 ... getMax(zIndex, yIndex, grid) + 1 {
-                nextGrid = setCube(nextGrid, zIndex, yIndex, xIndex, nextState(grid, zIndex, yIndex, xIndex))
+func activeNeighbors(_ coords: [Int: [Int: [Int: [Int: Bool]]]], _ w: Int, _ z: Int, _ y: Int, _ x: Int) -> Int {
+    let slopes = [
+        (-1, -1, -1, -1),
+        (-1, -1, -1, 0),
+        (-1, -1, -1, +1),
+        (-1, -1, 0, -1),
+        (-1, -1, 0, 0),
+        (-1, -1, 0, +1),
+        (-1, -1, +1, -1),
+        (-1, -1, +1, 0),
+        (-1, -1, +1, +1),
+        (-1, 0, -1, -1),
+        (-1, 0, -1, 0),
+        (-1, 0, -1, +1),
+        (-1, 0, 0, -1),
+        (-1, 0, 0, 0),
+        (-1, 0, 0, +1),
+        (-1, 0, +1, -1),
+        (-1, 0, +1, 0),
+        (-1, 0, +1, +1),
+        (-1, +1, -1, -1),
+        (-1, +1, -1, 0),
+        (-1, +1, -1, +1),
+        (-1, +1, 0, -1),
+        (-1, +1, 0, 0),
+        (-1, +1, 0, +1),
+        (-1, +1, +1, -1),
+        (-1, +1, +1, 0),
+        (-1, +1, +1, +1),
+        (0, -1, -1, -1),
+        (0, -1, -1, 0),
+        (0, -1, -1, +1),
+        (0, -1, 0, -1),
+        (0, -1, 0, 0),
+        (0, -1, 0, +1),
+        (0, -1, +1, -1),
+        (0, -1, +1, 0),
+        (0, -1, +1, +1),
+        (0, 0, -1, -1),
+        (0, 0, -1, 0),
+        (0, 0, -1, +1),
+        (0, 0, 0, -1),
+        (0, 0, 0, +1),
+        (0, 0, +1, -1),
+        (0, 0, +1, 0),
+        (0, 0, +1, +1),
+        (0, +1, -1, -1),
+        (0, +1, -1, 0),
+        (0, +1, -1, +1),
+        (0, +1, 0, -1),
+        (0, +1, 0, 0),
+        (0, +1, 0, +1),
+        (0, +1, +1, -1),
+        (0, +1, +1, 0),
+        (0, +1, +1, +1),
+        (+1, -1, -1, -1),
+        (+1, -1, -1, 0),
+        (+1, -1, -1, +1),
+        (+1, -1, 0, -1),
+        (+1, -1, 0, 0),
+        (+1, -1, 0, +1),
+        (+1, -1, +1, -1),
+        (+1, -1, +1, 0),
+        (+1, -1, +1, +1),
+        (+1, 0, -1, -1),
+        (+1, 0, -1, 0),
+        (+1, 0, -1, +1),
+        (+1, 0, 0, -1),
+        (+1, 0, 0, 0),
+        (+1, 0, 0, +1),
+        (+1, 0, +1, -1),
+        (+1, 0, +1, 0),
+        (+1, 0, +1, +1),
+        (+1, +1, -1, -1),
+        (+1, +1, -1, 0),
+        (+1, +1, -1, +1),
+        (+1, +1, 0, -1),
+        (+1, +1, 0, 0),
+        (+1, +1, 0, +1),
+        (+1, +1, +1, -1),
+        (+1, +1, +1, 0),
+        (+1, +1, +1, +1),
+    ]
+    return slopes.reduce(0) { $0 + (coords[w + $1.0]?[z + $1.1]?[y + $1.2]?[x + $1.3] == true ? 1 : 0) }
+}
+
+func setCube(_ coords: [Int: [Int: [Int: [Int: Bool]]]], _ w: Int, _ z: Int, _ y: Int, _ x: Int, _ active: Bool) -> [Int: [Int: [Int: [Int: Bool]]]] {
+    // if !active, coords[w]?[z]?[y]?[x] != true { return coords }
+    var coords = coords
+    if coords[w] == nil {
+        coords[w] = [:]
+    }
+    if coords[w]![z] == nil {
+        coords[w]![z] = [:]
+    }
+    if coords[w]![z]![y] == nil {
+        coords[w]![z]![y] = [:]
+    }
+    coords[w]![z]![y]![x] = active
+    return coords
+}
+
+func nextState(_ coords: [Int: [Int: [Int: [Int: Bool]]]], _ w: Int, _ z: Int, _ y: Int, _ x: Int) -> Bool {
+    let neighbors = activeNeighbors(coords, w, z, y, x)
+    let active = coords[w]?[z]?[y]?[x] == true
+    return (active && (neighbors == 2 || neighbors == 3)) || (!active && neighbors == 3)
+}
+
+// func copyCoords(_ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: [Int: [Int: Bool]]]] {
+//     var newCoords: [Int: [Int: [Int: [Int: Bool]]]] = [:]
+//     for (wIndex, _) in coords {
+//         if newCoords[wIndex] == nil {
+//             newCoords[wIndex] = [:]
+//         }
+//         for (zIndex, _) in coords {
+//             if newCoords[wIndex]![zIndex] == nil {
+//                 newCoords[wIndex]![zIndex] = [:]
+//             }
+//             for (yIndex, _) in coords[wIndex]![zIndex]! {
+//                 if newCoords[wIndex]![zIndex]![yIndex] == nil {
+//                     newCoords[wIndex]![zIndex]![yIndex] = [:]
+//                 }
+
+//                 for (xIndex, _) in coords[wIndex]![zIndex]![yIndex]! {
+//                     newCoords[wIndex]![zIndex]![yIndex]![xIndex] = coords[wIndex]![zIndex]![yIndex]![xIndex]
+//                 }
+//             }
+//         }
+//     }
+//     return newCoords
+// }
+
+func runCycle(_ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> [Int: [Int: [Int: [Int: Bool]]]] {
+    // var nextCoords: [Int: [Int: [Int: [Int: Bool]]]] = copyCoords(coords)
+    var nextCoords: [Int: [Int: [Int: [Int: Bool]]]] = [:]
+    for wIndex in coords.keys.min()! - 1 ... coords.keys.max()! + 1 {
+        for zIndex in getMin(wIndex, coords) - 1 ... getMax(wIndex, coords) + 1 {
+            for yIndex in getMin(wIndex, zIndex, coords) - 1 ... getMax(wIndex, zIndex, coords) + 1 {
+                for xIndex in getMin(wIndex, zIndex, yIndex, coords) - 1 ... getMax(wIndex, zIndex, yIndex, coords) + 1 {
+                    nextCoords = setCube(nextCoords, wIndex, zIndex, yIndex, xIndex, nextState(coords, wIndex, zIndex, yIndex, xIndex))
+                }
             }
         }
     }
-    return nextGrid
+    return nextCoords
 }
 
-func countActive(_ grid: [Int: [Int: [Int: Bool]]]) -> Int {
+func countActive(_ coords: [Int: [Int: [Int: [Int: Bool]]]]) -> Int {
     var count = 0
-    for (zIndex, _) in grid {
-        for (yIndex, _) in grid[zIndex]! {
-            for (xIndex, _) in grid[zIndex]![yIndex]! {
-                if grid[zIndex]![yIndex]![xIndex]! {
+    for (wIndex, _) in coords {
+        for (zIndex, _) in coords {
+            for (yIndex, _) in coords[wIndex]![zIndex]! {
+                for (xIndex, _) in coords[wIndex]![zIndex]![yIndex]! where coords[wIndex]![zIndex]![yIndex]![xIndex]! {
                     count += 1
                 }
             }
@@ -166,48 +284,44 @@ func countActive(_ grid: [Int: [Int: [Int: Bool]]]) -> Int {
     return count
 }
 
-func print(_ grid: [Int: [Int: [Int: Bool]]]) {
-    for zIndex in grid.keys.min()! ... grid.keys.max()! {
-        print("z=\(zIndex)")
-        for yIndex in getMin(zIndex, grid) ... getMax(zIndex, grid) {
-            for xIndex in getMin(zIndex, yIndex, grid) ... getMax(zIndex, yIndex, grid) {
-                let value = grid[zIndex]?[yIndex]?[xIndex]
-                var char = " "
-                if value == true {
-                    char = "#"
-                }
-                if value == false {
-                    char = "."
-                }
-                print(char, terminator: "")
-            }
-            print("")
-        }
-        print("")
-    }
-}
-
-func part1() -> Int {
-    print("Before any cycles:")
-    print("")
-    print(grid)
-    print(countActive(grid))
-    for cycle in 0 ..< 6 {
-        grid = runCycle(grid)
-        print("")
-        print("")
-        print("After \(cycle + 1) cycle:")
-        print("")
-        print(grid)
-        print(countActive(grid))
-    }
-    return countActive(grid)
-}
-
-print("Part 1: \(part1())")
-
-// func part2() -> Int {
-//     return -1
+// func print(_ coords: [Int: [Int: [Int: [Int: Bool]]]]) {
+//     for wIndex in coords.keys.min()! ... coords.keys.max()! {
+//         for zIndex in getMin(wIndex, coords) - 1 ... getMax(wIndex, coords) + 1 {
+//             print("z=\(zIndex), w=\(wIndex)")
+//             for yIndex in getMin(wIndex, zIndex, coords) ... getMax(wIndex, zIndex, coords) {
+//                 for xIndex in getMin(wIndex, zIndex, yIndex, coords) ... getMax(wIndex, zIndex, yIndex, coords) {
+//                     let value = coords[wIndex]?[zIndex]?[yIndex]?[xIndex]
+//                     var char = " "
+//                     if value == true {
+//                         char = "#"
+//                     }
+//                     if value == false {
+//                         char = "."
+//                     }
+//                     print(char, terminator: "")
+//                 }
+//                 print("")
+//             }
+//             print("")
+//         }
+//     }
 // }
 
-// print("Part 2: \(part2())")
+func part2() -> Int {
+    // print("Before any cycles:")
+    // print("")
+    // print(coords)
+    // print(countActive(coords))
+    for _ in 0 ..< 6 {
+        coords = runCycle(coords)
+        // print("")
+        // print("")
+        // print("After \(cycle + 1) cycle:")
+        // print("")
+        // print(coords)
+        // print(countActive(coords))
+    }
+    return countActive(coords)
+}
+
+print("Part 2: \(part2())")
