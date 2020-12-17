@@ -74,37 +74,70 @@ func nextState(_ grid: [Int: [Int: [Int: Bool]]], _ z: Int, _ y: Int, _ x: Int) 
     return (active && (neighbors == 2 || neighbors == 3)) || (!active && neighbors == 3)
 }
 
-func get(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
+func getMin(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
     var plane = grid[z]
     if plane == nil {
-        plane = grid.first!.value
+        for (_, currentPlane) in grid {
+            if plane == nil || plane!.keys.min()! > currentPlane.keys.min()! {
+                plane = currentPlane
+            }
+        }
+    }
+    return plane!
+}
+
+func getMax(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: Bool]] {
+    var plane = grid[z]
+    if plane == nil {
+        for (_, currentPlane) in grid {
+            if plane == nil || plane!.keys.max()! < currentPlane.keys.max()! {
+                plane = currentPlane
+            }
+        }
     }
     return plane!
 }
 
 func getMin(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return get(z, grid).keys.min()!
+    return getMin(z, grid).keys.min()!
 }
 
 func getMax(_ z: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return get(z, grid).keys.max()!
+    return getMax(z, grid).keys.max()!
 }
 
-func get(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool] {
-    let plane = get(z, grid)
+func getMin(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool] {
+    let plane: [Int: [Int: Bool]] = getMin(z, grid)
     var line = plane[y]
     if line == nil {
-        line = plane.first!.value
+        for (_, currentPlane) in plane {
+            if line == nil || line!.keys.min()! > currentPlane.keys.min()! {
+                line = currentPlane
+            }
+        }
+    }
+    return line!
+}
+
+func getMax(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> [Int: Bool] {
+    let plane: [Int: [Int: Bool]] = getMax(z, grid)
+    var line = plane[y]
+    if line == nil {
+        for (_, currentPlane) in plane {
+            if line == nil || line!.keys.max()! < currentPlane.keys.max()! {
+                line = currentPlane
+            }
+        }
     }
     return line!
 }
 
 func getMin(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return get(z, y, grid).keys.min()!
+    return getMin(z, y, grid).keys.min()!
 }
 
 func getMax(_ z: Int, _ y: Int, _ grid: [Int: [Int: [Int: Bool]]]) -> Int {
-    return get(z, y, grid).keys.max()!
+    return getMax(z, y, grid).keys.max()!
 }
 
 func runCycle(_ grid: [Int: [Int: [Int: Bool]]]) -> [Int: [Int: [Int: Bool]]] {
