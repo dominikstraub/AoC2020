@@ -17,30 +17,39 @@ let parts = input
             }
     }
 
+class RuleSet: CustomStringConvertible {
+    var ruleIds: [Int] = []
+    func getRules(allRules: [Int: Rule]) -> [Rule] {
+        return ruleIds.compactMap { allRules[$0] }
+    }
+
+    init(line: String) {
+        ruleIds = line.components(separatedBy: " ").compactMap { Int($0) }
+    }
+
+    public var description: String {
+        ruleIds.map { "\($0)" }.joined(separator: " ")
+    }
+}
+
 class Rule: CustomStringConvertible {
     var id: Int
     var character: String?
-    var rules: [Rule] = []
-    var ruleIds: [Int] = []
+    var ruleSets: [RuleSet] = []
     var characterCounts: [String: [Int: Bool]] = [:]
-
-    func getRules(allRules: [Int: Rule]) -> [Rule] {
-        if ruleIds.isEmpty {
-            return rules
-        } else {
-            return ruleIds.compactMap { allRules[$0] }
-        }
-    }
 
     func match(message: String, allRules: [Int: Rule]) -> [Int] {
         print("testing: \(message) with \(self)")
 
+        var path = 0
         if let characterCounts = characterCounts[message] {
             let characterCounts = characterCounts.compactMap { $0.value == false ? nil : $0.key }
-            print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
-            return characterCounts
+            path = characterCounts.count
+            // print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
+            // return characterCounts
+        } else {
+            characterCounts[message] = [:]
         }
-        characterCounts[message] = [:]
 
         if let character = character {
             let matches = message[0 ..< 1] == character
@@ -49,12 +58,12 @@ class Rule: CustomStringConvertible {
             return matches ? [1] : []
         }
 
-        for rule in getRules(allRules: allRules) {
-            print("testing: \(message) with \(rule)")
+        for ruleSet in ruleSets {
+            print("testing: \(message) with \(ruleSet)")
             var ruleSetMatches = false
             var ruleSetCharacterCounts: [Int: Bool] = [:]
             var index = 0
-            for rule in rule.getRules(allRules: allRules) {
+            for rule in ruleSet.getRules(allRules: allRules) {
                 if message.count <= index {
                     print("\(ruleSetMatches)")
                     print("\(index)")
@@ -70,7 +79,14 @@ class Rule: CustomStringConvertible {
                 ruleSetMatches = true
 
                 characterCounts.forEach { ruleSetCharacterCounts[$0] = true }
-                index += characterCounts[0] // TODO:
+
+                if path >= characterCounts.count {
+                    let characterCounts = self.characterCounts[message]!.compactMap { $0.value == false ? nil : $0.key }
+                    print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
+                    return characterCounts
+                } else {
+                    index += characterCounts[path] // TODO:
+                }
             }
             characterCounts[message]![index] = ruleSetMatches
         }
@@ -82,26 +98,20 @@ class Rule: CustomStringConvertible {
 
     init(line: String) {
         let ruleParts = line.components(separatedBy: ": ")
-        if ruleParts.count == 1 {
-            id = -1
-            ruleIds = line.components(separatedBy: " ").compactMap { Int($0) }
+        id = Int(ruleParts[0])!
+        if ruleParts[1][0] == "\"" {
+            character = ruleParts[1].components(separatedBy: "\"")[1]
         } else {
-            id = Int(ruleParts[0])!
-            if ruleParts[1][0] == "\"" {
-                character = ruleParts[1].components(separatedBy: "\"")[1]
-            } else {
-                rules = ruleParts[1].components(separatedBy: " | ").compactMap { Rule(line: $0) }
-            }
+            ruleSets = ruleParts[1].components(separatedBy: " | ").compactMap { RuleSet(line: $0) }
         }
     }
 
     public var description: String {
-        return "desc"
-//        var string = "\(id): "
-//        if let character = character {
-//            string += "\"\(character)\""
-//        }
-//        return string + getRules.map { $0.map { "\($0.ruleIds)" }.joined(separator: " ") }.joined(separator: " | ")
+        var string = "\(id): "
+        if let character = character {
+            string += "\"\(character)\""
+        }
+        return string + ruleSets.map { $0.description }.joined(separator: " | ")
     }
 }
 
