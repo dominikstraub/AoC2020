@@ -20,8 +20,17 @@ let parts = input
 class Rule: CustomStringConvertible {
     var id: Int
     var character: String?
-    var ruleSets: [[Int]] = []
+    var rules: [Rule] = []
+    var ruleIds: [Int] = []
     var characterCounts: [String: [Int: Bool]] = [:]
+
+    func getRules(allRules: [Int: Rule]) -> [Rule] {
+        if ruleIds.isEmpty {
+            return rules
+        } else {
+            return ruleIds.compactMap { allRules[$0] }
+        }
+    }
 
     func match(message: String, allRules: [Int: Rule]) -> [Int] {
         print("testing: \(message) with \(self)")
@@ -40,13 +49,12 @@ class Rule: CustomStringConvertible {
             return matches ? [1] : []
         }
 
-        for ruleSet in ruleSets {
-            print("testing: \(message) with \(ruleSet)")
+        for rule in getRules(allRules: allRules) {
+            print("testing: \(message) with \(rule)")
             var ruleSetMatches = false
             var ruleSetCharacterCounts: [Int: Bool] = [:]
             var index = 0
-            for ruleId in ruleSet {
-                let rule = allRules[ruleId]!
+            for rule in rule.getRules(allRules: allRules) {
                 if message.count <= index {
                     print("\(ruleSetMatches)")
                     print("\(index)")
@@ -74,24 +82,26 @@ class Rule: CustomStringConvertible {
 
     init(line: String) {
         let ruleParts = line.components(separatedBy: ": ")
-        id = Int(ruleParts[0])!
-        if ruleParts[1][0] == "\"" {
-            character = ruleParts[1].components(separatedBy: "\"")[1]
+        if ruleParts.count == 1 {
+            id = -1
+            ruleIds = line.components(separatedBy: " ").compactMap { Int($0) }
         } else {
-            ruleSets = ruleParts[1].components(separatedBy: " | ").compactMap { ruleSet in
-                ruleSet.components(separatedBy: " ").compactMap { rule in
-                    Int(rule)
-                }
+            id = Int(ruleParts[0])!
+            if ruleParts[1][0] == "\"" {
+                character = ruleParts[1].components(separatedBy: "\"")[1]
+            } else {
+                rules = ruleParts[1].components(separatedBy: " | ").compactMap { Rule(line: $0) }
             }
         }
     }
 
     public var description: String {
-        var string = "\(id): "
-        if let character = character {
-            string += "\"\(character)\""
-        }
-        return string + ruleSets.map { $0.map { "\($0)" }.joined(separator: " ") }.joined(separator: " | ")
+        return "desc"
+//        var string = "\(id): "
+//        if let character = character {
+//            string += "\"\(character)\""
+//        }
+//        return string + getRules.map { $0.map { "\($0.ruleIds)" }.joined(separator: " ") }.joined(separator: " | ")
     }
 }
 
