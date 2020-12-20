@@ -1,30 +1,78 @@
 import Foundation
 import Utils
 
+let verbosity = 0
+
 // let input = try Utils.getInput(bundle: Bundle.module, file: "test")
-let input = try Utils.getInput(bundle: Bundle.module, file: "test2")
-// let input = try Utils.getInput(bundle: Bundle.module)
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test2")
+let input = try Utils.getInput(bundle: Bundle.module)
 
 let parts = input
     .components(separatedBy: "\n\n")
     .compactMap { part -> [String] in
         part.components(separatedBy: "\n")
             .compactMap { line -> String? in
-                if line == "" {
+                if line == "" || line[0] == "#" {
                     return nil
                 }
                 return line
             }
     }
 
-class RuleSet: CustomStringConvertible {
+var rules: [Int: Rule] = [:]
+for line in parts[0] {
+    let rule = Rule.parse(line: line)
+    rules[rule.id] = rule
+    if verbosity > 1 {
+        print(rule)
+    }
+}
+
+protocol matchable {
+    func match(message _: String, allRules _: [Int: Rule]) -> [Int]
+}
+
+class RuleSet: CustomStringConvertible, matchable {
     var ruleIds: [Int] = []
+
     func getRules(allRules: [Int: Rule]) -> [Rule] {
         return ruleIds.compactMap { allRules[$0] }
     }
 
-    init(line: String) {
-        ruleIds = line.components(separatedBy: " ").compactMap { Int($0) }
+    func match(message: String, allRules: [Int: Rule]) -> [Int] {
+        if verbosity > 1 {
+            print("testing: \(message) with \(self)")
+        }
+
+        var indices = [0]
+        for rule in getRules(allRules: allRules) {
+            if verbosity > 1 {
+                print("sub...")
+            }
+            indices = indices.filter { message.count > $0 }
+            let oldIndices = indices
+            indices = []
+
+            for index in oldIndices {
+                if verbosity > 1 {
+                    print("index...")
+                }
+                let message = String(message[index...])
+                let characterCounts = rule.match(message: message, allRules: allRules)
+                characterCounts.forEach {
+                    indices.append(index + $0)
+                }
+            }
+        }
+
+        if verbosity > 1 {
+            print(!indices.isEmpty ? "+ \(indices)" : "-")
+        }
+        return indices
+    }
+
+    init(setString: String) {
+        ruleIds = setString.components(separatedBy: " ").compactMap { Int($0) }
     }
 
     public var description: String {
@@ -32,128 +80,141 @@ class RuleSet: CustomStringConvertible {
     }
 }
 
-class Rule: CustomStringConvertible {
-    var id: Int
-    var character: String?
-    var ruleSets: [RuleSet] = []
+class Rule: CustomStringConvertible, matchable {
+    static func parse(line: String) -> Rule {
+        let ruleParts = line.components(separatedBy: ": ")
+        if ruleParts[1][0] == "\"" {
+            return ElementaryRule(ruleParts: ruleParts)
+        } else {
+            return Complex(ruleParts: ruleParts)
+        }
+    }
+
+    let id: Int
     var characterCounts: [String: [Int: Bool]] = [:]
 
-    func match(message: String, allRules: [Int: Rule]) -> [Int] {
-        print("testing: \(message) with \(self)")
+    func reset() {
+        characterCounts = [:]
+    }
 
-        var path = 0
+    func match(message _: String, allRules _: [Int: Rule]) -> [Int] {
+        if verbosity > 1 {
+            print("========= ERROR ============")
+        }
+        exit(-1)
+    }
+
+    init(ruleParts: [String]) {
+        id = Int(ruleParts[0])!
+    }
+
+    public var description: String {
+        return "\(id): "
+    }
+}
+
+extension Dictionary where Value == Rule {
+    func resetAll() {
+        forEach { $0.value.reset() }
+    }
+}
+
+class Complex: Rule {
+    let ruleSets: [RuleSet]
+
+    override func match(message: String, allRules: [Int: Rule]) -> [Int] {
+        if verbosity > 1 {
+            print("testing: \(message) with \(self)")
+        }
+
         if let characterCounts = characterCounts[message] {
             let characterCounts = characterCounts.compactMap { $0.value == false ? nil : $0.key }
-            path = characterCounts.count
-            // print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
-            // return characterCounts
+            if verbosity > 1 {
+                print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
+            }
+            return characterCounts
         } else {
             characterCounts[message] = [:]
         }
 
-        if let character = character {
-            let matches = message[0 ..< 1] == character
-            characterCounts[message]![1] = matches
-            print(matches ? "+" : "-")
-            return matches ? [1] : []
-        }
-
         for ruleSet in ruleSets {
-            print("testing: \(message) with \(ruleSet)")
-            var ruleSetMatches = false
-            var ruleSetCharacterCounts: [Int: Bool] = [:]
-            var index = 0
-            for rule in ruleSet.getRules(allRules: allRules) {
-                if message.count <= index {
-                    print("\(ruleSetMatches)")
-                    print("\(index)")
-                    print("--")
-                    break
-                }
-                let message = String(message[index...])
-                print("sub...")
-                let characterCounts = rule.match(message: message, allRules: allRules)
-                if characterCounts.isEmpty {
-                    break
-                }
-                ruleSetMatches = true
+            let ruleSetMatches = ruleSet.match(message: message, allRules: allRules)
+            ruleSetMatches.forEach { characterCounts[message]![$0] = true }
+        }
 
-                characterCounts.forEach { ruleSetCharacterCounts[$0] = true }
-
-                if path >= characterCounts.count {
-                    let characterCounts = self.characterCounts[message]!.compactMap { $0.value == false ? nil : $0.key }
-                    print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
-                    return characterCounts
-                } else {
-                    index += characterCounts[path] // TODO:
-                }
+        if let characterCounts = self.characterCounts[message]?.compactMap({ $0.value == false ? nil : $0.key }) {
+            if verbosity > 1 {
+                print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
             }
-            characterCounts[message]![index] = ruleSetMatches
-        }
-
-        let characterCounts = self.characterCounts[message]!.compactMap { $0.value == false ? nil : $0.key }
-        print(!characterCounts.isEmpty ? "+ \(characterCounts)" : "-")
-        return characterCounts
-    }
-
-    init(line: String) {
-        let ruleParts = line.components(separatedBy: ": ")
-        id = Int(ruleParts[0])!
-        if ruleParts[1][0] == "\"" {
-            character = ruleParts[1].components(separatedBy: "\"")[1]
+            return characterCounts
         } else {
-            ruleSets = ruleParts[1].components(separatedBy: " | ").compactMap { RuleSet(line: $0) }
+            return []
         }
     }
 
-    public var description: String {
-        var string = "\(id): "
-        if let character = character {
-            string += "\"\(character)\""
-        }
-        return string + ruleSets.map { $0.description }.joined(separator: " | ")
+    override init(ruleParts: [String]) {
+        ruleSets = ruleParts[1].components(separatedBy: " | ").compactMap { RuleSet(setString: $0) }
+        super.init(ruleParts: ruleParts)
+    }
+
+    override public var description: String {
+        return super.description + ruleSets.map { $0.description }.joined(separator: " | ")
     }
 }
 
-// func part1() -> Int {
-//     var rules: [Int: Rule] = [:]
-//     for line in parts[0] {
-//         let rule = Rule(line: line)
-//         rules[rule.id] = rule
-//         // print(rule)
-//     }
-//     var count = 0
-//     for message in parts[1] {
-//         // print("new message=======")
-//         let result = rules[0]!.match(message: message, allRules: rules)
-//         if result.matches, result.characterCount == message.count {
-//             print("matched: \(message)")
-//             count += 1
-//         }
-//     }
-//     return count
-// }
+class ElementaryRule: Rule {
+    let character: String
 
-// print("Part 1: \(part1())")
-
-func part2() -> Int {
-    var rules: [Int: Rule] = [:]
-    for line in parts[0] {
-        let rule = Rule(line: line)
-        rules[rule.id] = rule
-        // print(rule)
+    override func match(message: String, allRules _: [Int: Rule]) -> [Int] {
+        if verbosity > 1 {
+            print("testing: \(message) with \(self)")
+        }
+        characterCounts[message] = [:]
+        let matches = message[0 ..< 1] == character
+        characterCounts[message]![1] = matches
+        if verbosity > 1 {
+            print(matches ? "+" : "-")
+        }
+        return matches ? [1] : []
     }
-    rules[8] = Rule(line: "8: 42 | 42 8")
-    rules[11] = Rule(line: "11: 42 31 | 42 11 31")
-    var count = 0
-    for message in parts[1] {
-        // print("new message=======")
+
+    override init(ruleParts: [String]) {
+        character = ruleParts[1].components(separatedBy: "\"")[1]
+        super.init(ruleParts: ruleParts)
+    }
+
+    override public var description: String {
+        return super.description + "\"\(character)\""
+    }
+}
+
+func validateMessages() -> [String] {
+    return parts[1].compactMap { message in
+        if verbosity > 0 {
+            print("new message=======: \(message)")
+        }
         if !rules[0]!.match(message: message, allRules: rules).compactMap({ $0 == message.count ? $0 : nil }).isEmpty {
-            print("matched: \(message)")
-            count += 1
+            if verbosity > 0 {
+                print("matched: \(message)")
+            }
+            return message
+        } else {
+            return nil
         }
     }
-    return count
+}
+
+func part1() -> Int {
+    return validateMessages().count
+}
+
+print("Part 1: \(part1())")
+
+func part2() -> Int {
+    rules[8] = Rule.parse(line: "8: 42 | 42 8")
+    rules[11] = Rule.parse(line: "11: 42 31 | 42 11 31")
+    rules.resetAll()
+    return validateMessages().count
 }
 
 print("Part 2: \(part2())")
