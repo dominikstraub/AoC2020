@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-let input = try Utils.getInput(bundle: Bundle.module, file: "test")
-// let input = try Utils.getInput(bundle: Bundle.module)
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+let input = try Utils.getInput(bundle: Bundle.module)
 
 let tiles = input.components(separatedBy: "\n\n")
     .map { tile -> Tile in
@@ -17,9 +17,14 @@ let tiles = input.components(separatedBy: "\n\n")
 
 print(tiles)
 
+typealias Row = [Bool]
+typealias ImageData = [Row]
+typealias Border = [Bool]
+
 class Tile: CustomStringConvertible {
     let id: Int
-    let data: [[Bool]]
+    let data: ImageData
+    var matchingTiles: [Int: Tile] = [:]
 
     func flippedH() -> Tile {
         Tile(tile: self, data: data.map { $0.reversed() })
@@ -36,14 +41,56 @@ class Tile: CustomStringConvertible {
         if times == 0 {
             return self
         }
-        var newData: [[Bool]] = []
-        for (y, line) in data.enumerated() {
-            newData[y] = []
-            for (x, _) in line.enumerated() {
-                newData[y][x] = data[data.count - x][y]
+        var newData: ImageData = []
+        for (y, row) in data.enumerated() {
+            newData.insert([], at: y)
+            for (x, _) in row.enumerated() {
+                newData[y].insert(data[data.count - 1 - x][y], at: x)
             }
         }
         return Tile(tile: self, data: newData).rotated(times: times - 1)
+    }
+
+    func getMutations() -> [Tile] {
+        let rotatedTile = rotated()
+        return [
+            self, flippedH(), flippedV(), flippedH().flippedV(),
+            rotatedTile, rotatedTile.flippedH(), rotatedTile.flippedV(), rotatedTile.flippedH().flippedV(),
+        ]
+    }
+
+    func getTopBorder() -> Border {
+        data.first!
+    }
+
+    func getRightBorder() -> Border {
+        data.map { $0.last! }
+    }
+
+    func getBottomBorder() -> Border {
+        data.last!
+    }
+
+    func getLeftBorder() -> Border {
+        data.map { $0.first! }
+    }
+
+    func getBorders() -> [Border] {
+        [getTopBorder(), getRightBorder(), getBottomBorder(), getLeftBorder()]
+    }
+
+    func matches(tile: Tile) -> Bool {
+        for selfMutation in getMutations() {
+            for selfBorder in selfMutation.getBorders() {
+                for mutation in tile.getMutations() {
+                    for boder in mutation.getBorders() where selfBorder == boder {
+                        self.matchingTiles[tile.id] = tile
+                        tile.matchingTiles[self.id] = self
+                    }
+                }
+            }
+        }
+        return !matchingTiles.isEmpty
     }
 
     init(lines: [String]) {
@@ -51,7 +98,7 @@ class Tile: CustomStringConvertible {
         data = lines[1...].map { $0.map { $0 == "#" }}
     }
 
-    init(tile: Tile, data: [[Bool]]) {
+    init(tile: Tile, data: ImageData) {
         id = tile.id
         self.data = data
     }
@@ -62,7 +109,19 @@ class Tile: CustomStringConvertible {
 }
 
 func part1() -> Int {
-    -1
+    for tile in tiles {
+        for tile2 in tiles where tile.id != tile2.id {
+            _ = tile.matches(tile: tile2)
+        }
+    }
+    var sum = 1
+    for tile in tiles {
+        if tile.matchingTiles.count == 2 {
+            sum *= tile.id
+        }
+        print(tile.matchingTiles)
+    }
+    return sum
 }
 
 print("Part 1: \(part1())")
