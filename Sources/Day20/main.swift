@@ -52,10 +52,8 @@ class Tile: CustomStringConvertible {
     }
 
     func getMutations() -> [Tile] {
-        let rotatedTile = rotated()
         return [
-            self, flippedH(), flippedV(), flippedH().flippedV(),
-            rotatedTile, rotatedTile.flippedH(), rotatedTile.flippedV(), rotatedTile.flippedH().flippedV(),
+            self, flippedH(), flippedV(),
         ]
     }
 
@@ -80,17 +78,14 @@ class Tile: CustomStringConvertible {
     }
 
     func matches(tile: Tile) -> Bool {
-        for selfMutation in getMutations() {
-            for selfBorder in selfMutation.getBorders() {
-                for mutation in tile.getMutations() {
-                    for boder in mutation.getBorders() where selfBorder == boder {
-                        self.matchingTiles[tile.id] = tile
-                        tile.matchingTiles[self.id] = self
-                    }
-                }
+        for selfBorder in getMutations().flatMap({ $0.getBorders() }) {
+            for border in tile.getMutations().flatMap({ $0.getBorders() }) where selfBorder == border {
+                matchingTiles[tile.id] = tile
+                tile.matchingTiles[id] = self
+                return true
             }
         }
-        return !matchingTiles.isEmpty
+        return false
     }
 
     init(lines: [String]) {
@@ -114,6 +109,7 @@ func part1() -> Int {
             _ = tile.matches(tile: tile2)
         }
     }
+
     var sum = 1
     for tile in tiles {
         if tile.matchingTiles.count == 2 {
