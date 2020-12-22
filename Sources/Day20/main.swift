@@ -16,12 +16,13 @@ let tiles = input.components(separatedBy: "\n\n")
     }
 
 typealias Row = [Bool]
-typealias ImageData = [Row]
+typealias TileData = [Row]
 typealias Border = [Bool]
+typealias ImageData = [Int: [Int: Bool]]
 
 class Tile: CustomStringConvertible {
     let id: Int
-    let data: ImageData
+    let data: TileData
     var matchingTiles: [Int: Tile] = [:]
 
     func flippedH() -> Tile {
@@ -39,7 +40,7 @@ class Tile: CustomStringConvertible {
         if times == 0 {
             return self
         }
-        var newData: ImageData = []
+        var newData: TileData = []
         for (y, row) in data.enumerated() {
             newData.insert([], at: y)
             for (x, _) in row.enumerated() {
@@ -99,7 +100,7 @@ class Tile: CustomStringConvertible {
         data = lines[1...].map { $0.map { $0 == "#" }}
     }
 
-    init(tile: Tile, data: ImageData) {
+    init(tile: Tile, data: TileData) {
         id = tile.id
         self.data = data
     }
@@ -111,7 +112,7 @@ class Tile: CustomStringConvertible {
 
 class Image: CustomStringConvertible {
     var tiles: [Int: [Int: Tile]] = [:]
-    var data: [Int: [Int: Bool]] = [:]
+    var data: ImageData = [:]
 
     func updateData() {
         for (tileY, tileRow) in tiles {
@@ -139,6 +140,52 @@ class Image: CustomStringConvertible {
             }
             Swift.print("")
         }
+    }
+
+    func flippedH() -> Image {
+        var newData: ImageData = [:]
+        for (y, row) in data {
+            newData[y] = [:]
+            for (x, _) in row {
+                newData[y]![x] = data[y]![row.count - x - 1]
+            }
+        }
+        return Image(data: newData)
+    }
+
+    func flippedV() -> Image {
+        var newData: ImageData = [:]
+        for (y, _) in data {
+            newData[y] = data[data.count - y - 1]
+        }
+        return Image(data: newData)
+    }
+
+    /**
+     * @brief      rotate clock wise
+     */
+    func rotated(times: Int = 1) -> Image {
+        if times == 0 {
+            return self
+        }
+        var newData: ImageData = [:]
+        for (y, row) in data {
+            newData[y] = [:]
+            for (x, _) in row {
+                newData[y]![x] = data[data.count - 1 - x]![y]
+            }
+        }
+        return Image(data: newData).rotated(times: times - 1)
+    }
+
+    func getMutations() -> [Image] {
+        return [self, flippedH(), flippedV()]
+    }
+
+    init() {}
+
+    init(data: ImageData) {
+        self.data = data
     }
 
     public var description: String {
@@ -196,11 +243,6 @@ func part2() -> Int {
             image.tiles[y]![x] = tile
         }
     }
-
-    image.updateData()
-    image.print()
-
-    print("")
 
     for y in 0 ..< sideLength {
         if y > 0 {
