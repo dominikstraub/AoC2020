@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
-let input = try Utils.getInput(bundle: Bundle.module)
+let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+// let input = try Utils.getInput(bundle: Bundle.module)
 
 let tiles = input.components(separatedBy: "\n\n")
     .map { tile -> Tile in
@@ -14,8 +14,6 @@ let tiles = input.components(separatedBy: "\n\n")
         }
         return Tile(lines: lines)
     }
-
-print(tiles)
 
 typealias Row = [Bool]
 typealias ImageData = [Row]
@@ -52,9 +50,7 @@ class Tile: CustomStringConvertible {
     }
 
     func getMutations() -> [Tile] {
-        return [
-            self, flippedH(), flippedV(),
-        ]
+        return [self, flippedH(), flippedV()]
     }
 
     func getTopBorder() -> Border {
@@ -77,15 +73,25 @@ class Tile: CustomStringConvertible {
         [getTopBorder(), getRightBorder(), getBottomBorder(), getLeftBorder()]
     }
 
-    func matches(tile: Tile) -> Bool {
+    func matching(tile: Tile) {
         for selfBorder in getMutations().flatMap({ $0.getBorders() }) {
             for border in tile.getMutations().flatMap({ $0.getBorders() }) where selfBorder == border {
                 matchingTiles[tile.id] = tile
                 tile.matchingTiles[id] = self
-                return true
+                return
             }
         }
-        return false
+    }
+
+    func matches(tile: Tile) -> Tile? {
+        for selfBorder in getBorders() {
+            for mutation in tile.getMutations() {
+                for boder in mutation.getBorders() where selfBorder == boder {
+                    return mutation
+                }
+            }
+        }
+        return nil
     }
 
     init(lines: [String]) {
@@ -103,27 +109,112 @@ class Tile: CustomStringConvertible {
     }
 }
 
-func part1() -> Int {
-    for tile in tiles {
-        for tile2 in tiles where tile.id != tile2.id {
-            _ = tile.matches(tile: tile2)
+class Image: CustomStringConvertible {
+    var tiles: [Int: [Int: Tile]] = [:]
+    var data: [Int: [Int: Bool]] = [:]
+
+    func updateData() {
+        for (tileY, tileRow) in tiles {
+            for (tileX, tile) in tileRow {
+                for (y, row) in tile.data.enumerated() {
+                    if y == 0 || y == tile.data.count - 1 { continue }
+                    let newY = tileY * (tile.data.count - 2) + y - 1
+                    if data[newY] == nil {
+                        data[newY] = [:]
+                    }
+                    for (x, pixel) in row.enumerated() {
+                        if x == 0 || x == row.count - 1 { continue }
+                        let newX = tileX * (row.count - 2) + x - 1
+                        data[newY]![newX] = pixel
+                    }
+                }
+            }
         }
     }
 
-    var sum = 1
-    for tile in tiles {
-        if tile.matchingTiles.count == 2 {
-            sum *= tile.id
+    func print() {
+        for (_, row) in data {
+            for (_, pixel) in row {
+                Swift.print(pixel ? "#" : ".", terminator: "")
+            }
+            Swift.print("")
         }
-        print(tile.matchingTiles)
     }
-    return sum
+
+    public var description: String {
+        "\(tiles)"
+    }
 }
 
-print("Part 1: \(part1())")
+// func part1() -> Int {
+//     for tile in tiles {
+//         for tile2 in tiles where tile.id != tile2.id {
+//             tile.matching(tile: tile2)
+//         }
+//     }
 
-// func part2() -> Int {
-//     return -1
+//     var sum = 1
+//     for tile in tiles {
+//         if tile.matchingTiles.count == 2 {
+//             sum *= tile.id
+//         }
+//     }
+//     return sum
 // }
 
-// print("Part 2: \(part2())")
+// print("Part 1: \(part1())")
+
+func part2() -> Int {
+    for tile in tiles {
+        for tile2 in tiles where tile.id != tile2.id {
+            tile.matching(tile: tile2)
+        }
+    }
+
+    let image = Image()
+    for tile in tiles where tile.matchingTiles.count == 2 {
+        image.tiles[0] = [0: tile]
+        break
+    }
+    let sideLength = Int(Double(tiles.count).squareRoot())
+    for y in 0 ..< sideLength {
+        if image.tiles[y] == nil {
+            let tile = image.tiles[y - 1]![0]!.matchingTiles.filter { id, _ in
+                if y > 1, id == image.tiles[y - 2]![0]!.id { return false }
+                if id == image.tiles[y - 1]![1]!.id { return false }
+                return true
+            }.first!.value
+            image.tiles[y] = [0: tile]
+        }
+        for x in 1 ..< sideLength {
+            let tile = image.tiles[y]![x - 1]!.matchingTiles.filter { id, _ in
+                if y > 0, id == image.tiles[y - 1]![x - 1]!.id { return false }
+                if y > 0, !image.tiles[y - 1]![x]!.matchingTiles.contains(where: { $0.key == id }) { return false }
+                if x > 1, id == image.tiles[y]![x - 2]!.id { return false }
+                return true
+            }.first!.value
+            image.tiles[y]![x] = tile
+        }
+    }
+
+    image.updateData()
+    image.print()
+
+    print("")
+
+    for y in 0 ..< sideLength {
+        if y > 0 {
+            image.tiles[y]![0] = image.tiles[y - 1]![0]!.matches(tile: image.tiles[y]![0]!)
+        }
+        for x in 1 ..< sideLength {
+            image.tiles[y]![x] = image.tiles[y]![x - 1]!.matches(tile: image.tiles[y]![x]!)
+        }
+    }
+
+    image.updateData()
+    image.print()
+
+    return -1
+}
+
+print("Part 2: \(part2())")
