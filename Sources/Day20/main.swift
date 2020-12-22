@@ -179,7 +179,46 @@ class Image: CustomStringConvertible {
     }
 
     func getMutations() -> [Image] {
-        return [self, flippedH(), flippedV()]
+        let rotatedTile = rotated()
+        return [
+            self, flippedH(), flippedV(), flippedH().flippedV(),
+            rotatedTile, rotatedTile.flippedH(), rotatedTile.flippedV(), rotatedTile.flippedH().flippedV(),
+        ]
+    }
+
+    func findSeeMonsters() -> [(Int, Int)] {
+        var monsters: [(Int, Int)] = []
+        for (y, row) in data {
+            for (x, _) in row {
+                if findSeeMonster(y: y, x: x) {
+                    monsters.append((y, x))
+                }
+            }
+        }
+        return monsters
+    }
+
+    /**
+     * @brief      Finds a see monster.
+     *  01234567890123456789
+     * 0                  #
+     * 1#    ##    ##    ###
+     * 2 #  #  #  #  #  #
+     *
+     * @param      y     origin y
+     * @param      x     origin x
+     *
+     * @return     Bool
+     */
+    func findSeeMonster(y: Int, x: Int) -> Bool {
+        guard data.count > y + 2, data[y]!.count > x + 19 else { return false }
+        return data[y]![x + 18]! &&
+
+            data[y + 1]![x]! && data[y + 1]![x + 5]! && data[y + 1]![x + 6]! && data[y + 1]![x + 11]! &&
+            data[y + 1]![x + 12]! && data[y + 1]![x + 17]! && data[y + 1]![x + 18]! && data[y + 1]![x + 19]! &&
+
+            data[y + 2]![x + 1]! && data[y + 2]![x + 4]! && data[y + 2]![x + 7]! && data[y + 2]![x + 10]! &&
+            data[y + 2]![x + 13]! && data[y + 2]![x + 16]!
     }
 
     init() {}
@@ -255,6 +294,10 @@ func part2() -> Int {
 
     image.updateData()
     image.print()
+
+    for image in image.getMutations() {
+        print(image.findSeeMonsters())
+    }
 
     return -1
 }
