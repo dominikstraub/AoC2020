@@ -36,19 +36,19 @@ class Tile: CustomStringConvertible {
     /**
      * @brief      rotate clock wise
      */
-    func rotated(times: Int = 1) -> Tile {
-        if times == 0 {
-            return self
-        }
-        var newData: TileData = []
-        for (y, row) in data.enumerated() {
-            newData.insert([], at: y)
-            for (x, _) in row.enumerated() {
-                newData[y].insert(data[data.count - 1 - x][y], at: x)
-            }
-        }
-        return Tile(tile: self, data: newData).rotated(times: times - 1)
-    }
+    // func rotated(times: Int = 1) -> Tile {
+    //     if times == 0 {
+    //         return self
+    //     }
+    //     var newData: TileData = []
+    //     for (y, row) in data.enumerated() {
+    //         newData.insert([], at: y)
+    //         for (x, _) in row.enumerated() {
+    //             newData[y].insert(data[data.count - 1 - x][y], at: x)
+    //         }
+    //     }
+    //     return Tile(tile: self, data: newData).rotated(times: times - 1)
+    // }
 
     func getMutations() -> [Tile] {
         return [self, flippedH(), flippedV()]
@@ -205,20 +205,52 @@ class Image: CustomStringConvertible {
      * 1#    ##    ##    ###
      * 2 #  #  #  #  #  #
      *
+     * 0                  14
+     * 10    34    78    111213
+     * 2 1  2  5  6  9  10
+     *
      * @param      y     origin y
      * @param      x     origin x
      *
      * @return     Bool
      */
     func findSeeMonster(y: Int, x: Int) -> Bool {
+        // Swift.print("findSeeMonster")
         guard data.count > y + 2, data[y]!.count > x + 19 else { return false }
-        return data[y]![x + 18]! &&
+        // Swift.print("range ok")
 
-            data[y + 1]![x]! && data[y + 1]![x + 5]! && data[y + 1]![x + 6]! && data[y + 1]![x + 11]! &&
-            data[y + 1]![x + 12]! && data[y + 1]![x + 17]! && data[y + 1]![x + 18]! && data[y + 1]![x + 19]! &&
-
-            data[y + 2]![x + 1]! && data[y + 2]![x + 4]! && data[y + 2]![x + 7]! && data[y + 2]![x + 10]! &&
-            data[y + 2]![x + 13]! && data[y + 2]![x + 16]!
+        guard data[y]![x + 18]! else { return false }
+        // Swift.print("")
+        // Swift.print("14")
+        guard data[y + 1]![x]! else { return false }
+        // Swift.print("0")
+        guard data[y + 1]![x + 5]! else { return false }
+        // Swift.print("3")
+        guard data[y + 1]![x + 6]! else { return false }
+        // Swift.print("4")
+        guard data[y + 1]![x + 11]! else { return false }
+        // Swift.print("7")
+        guard data[y + 1]![x + 12]! else { return false }
+        // Swift.print("8")
+        guard data[y + 1]![x + 17]! else { return false }
+        // Swift.print("11")
+        guard data[y + 1]![x + 18]! else { return false }
+        // Swift.print("12")
+        guard data[y + 1]![x + 19]! else { return false }
+        // Swift.print("13")
+        guard data[y + 2]![x + 1]! else { return false }
+        // Swift.print("1")
+        guard data[y + 2]![x + 4]! else { return false }
+        // Swift.print("2")
+        guard data[y + 2]![x + 7]! else { return false }
+        // Swift.print("5")
+        guard data[y + 2]![x + 10]! else { return false }
+        // Swift.print("6")
+        guard data[y + 2]![x + 13]! else { return false }
+        // Swift.print("9")
+        guard data[y + 2]![x + 16]! else { return false }
+        // Swift.print("10")
+        return true
     }
 
     init() {}
@@ -265,15 +297,17 @@ func part2() -> Int {
     let sideLength = Int(Double(tiles.count).squareRoot())
     for y in 0 ..< sideLength {
         if image.tiles[y] == nil {
-            let tile = image.tiles[y - 1]![0]!.matchingTiles.filter { id, _ in
+            let tile = image.tiles[y - 1]![0]!.matchingTiles.filter { id, tile in
                 if y > 1, id == image.tiles[y - 2]![0]!.id { return false }
                 if id == image.tiles[y - 1]![1]!.id { return false }
+                if tile.matchingTiles.count > 3 { return false }
                 return true
             }.first!.value
             image.tiles[y] = [0: tile]
         }
         for x in 1 ..< sideLength {
-            let tile = image.tiles[y]![x - 1]!.matchingTiles.filter { id, _ in
+            let tile = image.tiles[y]![x - 1]!.matchingTiles.filter { id, tile in
+                if y == 0, tile.matchingTiles.count > 3 { return false }
                 if y > 0, id == image.tiles[y - 1]![x - 1]!.id { return false }
                 if y > 0, !image.tiles[y - 1]![x]!.matchingTiles.contains(where: { $0.key == id }) { return false }
                 if x > 1, id == image.tiles[y]![x - 2]!.id { return false }
@@ -293,9 +327,18 @@ func part2() -> Int {
     }
 
     image.updateData()
-    image.print()
+    // image.print()
+
+    // print()
 
     for image in image.getMutations() {
+        image.print()
+        for y in 0 ..< image.tiles.count {
+            for x in 0 ..< image.tiles[y]!.count {
+                print("\(image.tiles[y]![x]!)", terminator: " ")
+            }
+            print()
+        }
         print(image.findSeeMonsters())
     }
 
