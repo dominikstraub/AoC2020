@@ -87,7 +87,7 @@ class Tile: CustomStringConvertible {
     func matches(tile: Tile) -> Tile? {
         for selfBorder in getBorders() {
             for mutation in tile.getMutations() {
-                for boder in mutation.getBorders() where selfBorder == boder {
+                for border in mutation.getBorders() where selfBorder == border {
                     return mutation
                 }
             }
@@ -134,9 +134,9 @@ class Image: CustomStringConvertible {
     }
 
     func print() {
-        for (_, row) in data {
-            for (_, pixel) in row {
-                Swift.print(pixel ? "#" : ".", terminator: "")
+        for y in 0 ..< data.count {
+            for x in 0 ..< data[y]!.count {
+                Swift.print(data[y]![x]! ? "#" : ".", terminator: "")
             }
             Swift.print("")
         }
@@ -328,17 +328,10 @@ func part2() -> Int {
 
     image.updateData()
     // image.print()
-
     // print()
 
     for image in image.getMutations() {
         image.print()
-        for y in 0 ..< image.tiles.count {
-            for x in 0 ..< image.tiles[y]!.count {
-                print("\(image.tiles[y]![x]!)", terminator: " ")
-            }
-            print()
-        }
         print(image.findSeeMonsters())
     }
 
