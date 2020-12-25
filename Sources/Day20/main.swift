@@ -84,14 +84,13 @@ class Tile: CustomStringConvertible {
         }
     }
 
-    func matches(tile: Tile) -> Tile? {
-        for selfBorder in getBorders() {
-            for mutation in tile.getMutations() {
-                for border in mutation.getBorders() where selfBorder == border {
-                    return mutation
-                }
+    func border(border selfBorder: Border, matchesTile tile: Tile) -> Tile? {
+        for mutation in tile.getMutations() {
+            for border in mutation.getBorders() where selfBorder == border {
+                return mutation
             }
         }
+        print("not found")
         return nil
     }
 
@@ -317,12 +316,21 @@ func part2() -> Int {
         }
     }
 
+    for border in image.tiles[0]![1]!.getBorders() {
+        if let tile = image.tiles[0]![1]!.border(border: border, matchesTile: image.tiles[0]![0]!) {
+            image.tiles[0]![0] = tile
+            break
+        }
+    }
+
     for y in 0 ..< sideLength {
         if y > 0 {
-            image.tiles[y]![0] = image.tiles[y - 1]![0]!.matches(tile: image.tiles[y]![0]!)
+            image.tiles[y]![0] = image.tiles[y - 1]![0]!
+                .border(border: image.tiles[y - 1]![0]!.getBottomBorder(), matchesTile: image.tiles[y]![0]!)
         }
         for x in 1 ..< sideLength {
-            image.tiles[y]![x] = image.tiles[y]![x - 1]!.matches(tile: image.tiles[y]![x]!)
+            image.tiles[y]![x] = image.tiles[y]![x - 1]!
+                .border(border: image.tiles[y]![x - 1]!.getRightBorder(), matchesTile: image.tiles[y]![x]!)
         }
     }
 
