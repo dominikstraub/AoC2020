@@ -36,22 +36,30 @@ class Tile: CustomStringConvertible {
     /**
      * @brief      rotate clock wise
      */
-    // func rotated(times: Int = 1) -> Tile {
-    //     if times == 0 {
-    //         return self
-    //     }
-    //     var newData: TileData = []
-    //     for (y, row) in data.enumerated() {
-    //         newData.insert([], at: y)
-    //         for (x, _) in row.enumerated() {
-    //             newData[y].insert(data[data.count - 1 - x][y], at: x)
-    //         }
-    //     }
-    //     return Tile(tile: self, data: newData).rotated(times: times - 1)
-    // }
+    func rotated(times: Int = 1) -> Tile {
+        if times == 0 {
+            return self
+        }
+        var newData: TileData = []
+        for (y, row) in data.enumerated() {
+            newData.insert([], at: y)
+            for (x, _) in row.enumerated() {
+                newData[y].insert(data[data.count - 1 - x][y], at: x)
+            }
+        }
+        return Tile(tile: self, data: newData).rotated(times: times - 1)
+    }
 
-    func getMutations() -> [Tile] {
-        return [self, flippedH(), flippedV()]
+    func getMutations(withRotation: Bool = false) -> [Tile] {
+        if withRotation {
+            let rotatedTile = rotated()
+            return [
+                self, flippedH(), flippedV(), flippedH().flippedV(),
+                rotatedTile, rotatedTile.flippedH(), rotatedTile.flippedV(), rotatedTile.flippedH().flippedV(),
+            ]
+        } else {
+            return [self, flippedH(), flippedV()]
+        }
     }
 
     func getTopBorder() -> Border {
@@ -84,13 +92,14 @@ class Tile: CustomStringConvertible {
         }
     }
 
-    func border(border selfBorder: Border, matchesTile tile: Tile) -> Tile? {
-        for mutation in tile.getMutations() {
-            for border in mutation.getBorders() where selfBorder == border {
+    func matches(border selfBorder: Border, borderFunction: (Tile) -> () -> Border) -> Tile? {
+        for mutation in getMutations(withRotation: true) {
+            if selfBorder == borderFunction(mutation)() {
+                // print("found")
                 return mutation
             }
         }
-        print("not found")
+        // print("not found")
         return nil
     }
 
@@ -105,7 +114,14 @@ class Tile: CustomStringConvertible {
     }
 
     public var description: String {
-        "\(id)"
+        var string = ""
+        for y in 0 ..< data.count {
+            for x in 0 ..< data[y].count {
+                string.append(data[y][x] ? "#" : ".")
+            }
+            string.append("\n")
+        }
+        return string
     }
 }
 
@@ -129,15 +145,6 @@ class Image: CustomStringConvertible {
                     }
                 }
             }
-        }
-    }
-
-    func print() {
-        for y in 0 ..< data.count {
-            for x in 0 ..< data[y]!.count {
-                Swift.print(data[y]![x]! ? "#" : ".", terminator: "")
-            }
-            Swift.print("")
         }
     }
 
@@ -259,7 +266,14 @@ class Image: CustomStringConvertible {
     }
 
     public var description: String {
-        "\(tiles)"
+        var string = ""
+        for y in 0 ..< data.count {
+            for x in 0 ..< data[y]!.count {
+                string.append(data[y]![x]! ? "#" : ".")
+            }
+            string.append("\n")
+        }
+        return string
     }
 }
 
@@ -288,7 +302,7 @@ func part2() -> Int {
         }
     }
 
-    let image = Image()
+    var image = Image()
     for tile in tiles where tile.matchingTiles.count == 2 {
         image.tiles[0] = [0: tile]
         break
@@ -316,32 +330,47 @@ func part2() -> Int {
         }
     }
 
-    for border in image.tiles[0]![1]!.getBorders() {
-        if let tile = image.tiles[0]![1]!.border(border: border, matchesTile: image.tiles[0]![0]!) {
-            image.tiles[0]![0] = tile
+    // image.updateData()
+    // print(image)
+    // print()
+
+    for mutation in image.tiles[0]![0]!.getMutations(withRotation: true) {
+        if
+            image.tiles[0]![1]!.matches(border: mutation.getRightBorder(), borderFunction: Tile.getLeftBorder) != nil,
+            image.tiles[1]![0]!.matches(border: mutation.getBottomBorder(), borderFunction: Tile.getTopBorder) != nil
+        {
+            image.tiles[0]![0] = mutation
+            // print("tile found")
             break
         }
     }
 
+    // image.updateData()
+    // print(image)
+    // print()
+
     for y in 0 ..< sideLength {
         if y > 0 {
-            image.tiles[y]![0] = image.tiles[y - 1]![0]!
-                .border(border: image.tiles[y - 1]![0]!.getBottomBorder(), matchesTile: image.tiles[y]![0]!)
+            image.tiles[y]![0] = image.tiles[y]![0]!.matches(border: image.tiles[y - 1]![0]!.getBottomBorder(), borderFunction: Tile.getTopBorder)
         }
         for x in 1 ..< sideLength {
-            image.tiles[y]![x] = image.tiles[y]![x - 1]!
-                .border(border: image.tiles[y]![x - 1]!.getRightBorder(), matchesTile: image.tiles[y]![x]!)
+            image.tiles[y]![x] = image.tiles[y]![x]!.matches(border: image.tiles[y]![x - 1]!.getRightBorder(), borderFunction: Tile.getLeftBorder)
         }
     }
 
     image.updateData()
-    // image.print()
+    // print(image)
     // print()
 
-    for image in image.getMutations() {
-        image.print()
-        print(image.findSeeMonsters())
+    for mutatedImage in image.getMutations() {
+        // print(image)
+        if mutatedImage.findSeeMonsters().count > 0 {
+            image = mutatedImage
+            break
+        }
     }
+
+    print(image)
 
     return -1
 }
