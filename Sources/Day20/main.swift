@@ -1,8 +1,8 @@
 import Foundation
 import Utils
 
-let input = try Utils.getInput(bundle: Bundle.module, file: "test")
-// let input = try Utils.getInput(bundle: Bundle.module)
+// let input = try Utils.getInput(bundle: Bundle.module, file: "test")
+let input = try Utils.getInput(bundle: Bundle.module)
 
 let tiles = input.components(separatedBy: "\n\n")
     .map { tile -> Tile in
@@ -221,42 +221,35 @@ class Image: CustomStringConvertible {
      * @return     Bool
      */
     func findSeeMonster(y: Int, x: Int) -> Bool {
-        // Swift.print("findSeeMonster")
         guard data.count > y + 2, data[y]!.count > x + 19 else { return false }
-        // Swift.print("range ok")
+        return
+            data[y]![x + 18]! &&
 
-        guard data[y]![x + 18]! else { return false }
-        // Swift.print("")
-        // Swift.print("14")
-        guard data[y + 1]![x]! else { return false }
-        // Swift.print("0")
-        guard data[y + 1]![x + 5]! else { return false }
-        // Swift.print("3")
-        guard data[y + 1]![x + 6]! else { return false }
-        // Swift.print("4")
-        guard data[y + 1]![x + 11]! else { return false }
-        // Swift.print("7")
-        guard data[y + 1]![x + 12]! else { return false }
-        // Swift.print("8")
-        guard data[y + 1]![x + 17]! else { return false }
-        // Swift.print("11")
-        guard data[y + 1]![x + 18]! else { return false }
-        // Swift.print("12")
-        guard data[y + 1]![x + 19]! else { return false }
-        // Swift.print("13")
-        guard data[y + 2]![x + 1]! else { return false }
-        // Swift.print("1")
-        guard data[y + 2]![x + 4]! else { return false }
-        // Swift.print("2")
-        guard data[y + 2]![x + 7]! else { return false }
-        // Swift.print("5")
-        guard data[y + 2]![x + 10]! else { return false }
-        // Swift.print("6")
-        guard data[y + 2]![x + 13]! else { return false }
-        // Swift.print("9")
-        guard data[y + 2]![x + 16]! else { return false }
-        // Swift.print("10")
-        return true
+            data[y + 1]![x]! &&
+            data[y + 1]![x + 5]! &&
+            data[y + 1]![x + 6]! &&
+            data[y + 1]![x + 11]! &&
+            data[y + 1]![x + 12]! &&
+            data[y + 1]![x + 17]! &&
+            data[y + 1]![x + 18]! &&
+            data[y + 1]![x + 19]! &&
+
+            data[y + 2]![x + 1]! &&
+            data[y + 2]![x + 4]! &&
+            data[y + 2]![x + 7]! &&
+            data[y + 2]![x + 10]! &&
+            data[y + 2]![x + 13]! &&
+            data[y + 2]![x + 16]!
+    }
+
+    func waterCount() -> Int {
+        var count = 0
+        for (_, row) in data {
+            for (_, pixel) in row where pixel {
+                count += 1
+            }
+        }
+        return count
     }
 
     init() {}
@@ -277,23 +270,23 @@ class Image: CustomStringConvertible {
     }
 }
 
-// func part1() -> Int {
-//     for tile in tiles {
-//         for tile2 in tiles where tile.id != tile2.id {
-//             tile.matching(tile: tile2)
-//         }
-//     }
+func part1() -> Int {
+    for tile in tiles {
+        for tile2 in tiles where tile.id != tile2.id {
+            tile.matching(tile: tile2)
+        }
+    }
 
-//     var sum = 1
-//     for tile in tiles {
-//         if tile.matchingTiles.count == 2 {
-//             sum *= tile.id
-//         }
-//     }
-//     return sum
-// }
+    var sum = 1
+    for tile in tiles {
+        if tile.matchingTiles.count == 2 {
+            sum *= tile.id
+        }
+    }
+    return sum
+}
 
-// print("Part 1: \(part1())")
+print("Part 1: \(part1())")
 
 func part2() -> Int {
     for tile in tiles {
@@ -362,17 +355,19 @@ func part2() -> Int {
     // print(image)
     // print()
 
+    var monsterCount = 0
     for mutatedImage in image.getMutations() {
         // print(image)
-        if mutatedImage.findSeeMonsters().count > 0 {
+        monsterCount = mutatedImage.findSeeMonsters().count
+        if monsterCount > 0 {
             image = mutatedImage
             break
         }
     }
 
-    print(image)
+    // print(image)
 
-    return -1
+    return image.waterCount() - monsterCount * 15
 }
 
 print("Part 2: \(part2())")
