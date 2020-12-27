@@ -30,19 +30,26 @@ struct Deck {
         cards.reversed().enumerated().map { ($0.offset + 1) * $0.element }.reduce(0, +)
     }
 
+    var hashCode: Double {
+        cards.reversed().enumerated().map {
+            let value: Double = 10 ^^ ($0.offset * 2)
+            return value * Double($0.element)
+        }.reduce(0, +)
+    }
+
     mutating func getNextCard() -> Int? {
         cards.removeFirst()
     }
 
     mutating func evalRound(ownCard: Int, otherCard: Int) {
         if ownCard > otherCard {
-            addRound(card1: ownCard, card2: otherCard)
+            addRound(winningCard: max(ownCard, otherCard), loosingCard: min(ownCard, otherCard))
         }
     }
 
-    mutating func addRound(card1: Int, card2: Int) {
-        cards.append(max(card1, card2))
-        cards.append(min(card1, card2))
+    mutating func addRound(winningCard: Int, loosingCard: Int) {
+        cards.append(winningCard)
+        cards.append(loosingCard)
     }
 
     init(cards: [Int]) {
@@ -58,11 +65,38 @@ struct SpaceCards {
         max(deck1.score, deck2.score)
     }
 
+    var hashCode: Double {
+        (10 ^^ (deck2.cards.count * 2)) * deck1.hashCode + deck2.hashCode
+    }
+
+    var previousRounds: Set<Double> = []
+
     mutating func playRound() {
+        // print("\n-- new Round --")
+        // print(deck1)
+        // print(deck2)
         let card1 = deck1.getNextCard()!
         let card2 = deck2.getNextCard()!
-        deck1.evalRound(ownCard: card1, otherCard: card2)
-        deck2.evalRound(ownCard: card2, otherCard: card1)
+        // print(card1)
+        // print(card2)
+        if previousRounds.contains(hashCode) {
+            deck1.addRound(winningCard: card1, loosingCard: card2)
+        } else {
+            previousRounds.insert(hashCode)
+            if deck1.cards.count >= card1, deck2.cards.count >= card2 {
+                var innerGame = SpaceCards(cards: [Array(deck1.cards[..<card1]), Array(deck2.cards[..<card2])])
+                innerGame.play()
+                // print("...anyway, back to game")
+                if innerGame.deck1.cards.isEmpty {
+                    deck2.addRound(winningCard: card2, loosingCard: card1)
+                } else {
+                    deck1.addRound(winningCard: card1, loosingCard: card2)
+                }
+            } else {
+                deck1.evalRound(ownCard: card1, otherCard: card2)
+                deck2.evalRound(ownCard: card2, otherCard: card1)
+            }
+        }
     }
 
     mutating func play() {
@@ -72,21 +106,28 @@ struct SpaceCards {
     }
 
     init(decks: [Deck]) {
+        // print("=== new Game ===")
         deck1 = decks[0]
         deck2 = decks[1]
     }
+
+    init(cards: [[Int]]) {
+        self.init(decks: [Deck(cards: cards[0]), Deck(cards: cards[1])])
+    }
 }
 
-func part1() -> Int {
+// func part1() -> Int {
+//    var game = SpaceCards(decks: decks)
+//    game.play()
+//    return game.winnerScore
+// }
+//
+// print("Part 1: \(part1())")
+
+func part2() -> Int {
     var game = SpaceCards(decks: decks)
     game.play()
     return game.winnerScore
 }
 
-print("Part 1: \(part1())")
-
-// func part2() -> Int {
-//     return -1
-// }
-
-// print("Part 2: \(part2())")
+print("Part 2: \(part2())")
