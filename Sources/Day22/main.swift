@@ -19,11 +19,11 @@ let decks = input
             })
     }
 
-struct Deck {
+struct Deck: CustomStringConvertible {
     var cards: [Int]
 
     var hasCardsLeft: Bool {
-        cards.count > 0
+        !cards.isEmpty
     }
 
     var score: Int {
@@ -55,11 +55,22 @@ struct Deck {
     init(cards: [Int]) {
         self.cards = cards
     }
+
+    public var description: String {
+        cards.map { "\($0)" }.joined(separator: ", ")
+    }
 }
+
+var gameCount = 0
 
 struct SpaceCards {
     var deck1: Deck
     var deck2: Deck
+
+    var previousRounds: Set<Double> = []
+
+    let gameNr: Int
+    var roundCount = 0
 
     var winnerScore: Int {
         max(deck1.score, deck2.score)
@@ -69,30 +80,34 @@ struct SpaceCards {
         (10 ^^ (deck2.cards.count * 2)) * deck1.hashCode + deck2.hashCode
     }
 
-    var previousRounds: Set<Double> = []
-
     mutating func playRound() {
-        // print("\n-- new Round --")
-        // print(deck1)
-        // print(deck2)
+        roundCount += 1
+        // print("\n-- Round \(roundCount) (Game \(gameNr)) --")
+        // print("Player 1's deck: \(deck1)")
+        // print("Player 2's deck: \(deck2)")
         let card1 = deck1.getNextCard()!
         let card2 = deck2.getNextCard()!
-        // print(card1)
-        // print(card2)
+        // print("Player 1 plays: \(card1)")
+        // print("Player 2 plays: \(card2)")
         if previousRounds.contains(hashCode) {
+            // print("!!Player 1 wins round \(roundCount) of game \(gameNr)!")
             deck1.addRound(winningCard: card1, loosingCard: card2)
         } else {
             previousRounds.insert(hashCode)
             if deck1.cards.count >= card1, deck2.cards.count >= card2 {
+                // print("Playing a sub-game to determine the winner...\n")
                 var innerGame = SpaceCards(cards: [Array(deck1.cards[..<card1]), Array(deck2.cards[..<card2])])
                 innerGame.play()
-                // print("...anyway, back to game")
-                if innerGame.deck1.cards.isEmpty {
-                    deck2.addRound(winningCard: card2, loosingCard: card1)
-                } else {
+                // print("\n...anyway, back to game \(gameNr).")
+                if innerGame.deck1.hasCardsLeft {
                     deck1.addRound(winningCard: card1, loosingCard: card2)
+                    // print("Player 1 wins round \(roundCount) of game \(gameNr)!")
+                } else {
+                    deck2.addRound(winningCard: card2, loosingCard: card1)
+                    // print("Player 2 wins round \(roundCount) of game \(gameNr)!")
                 }
             } else {
+                // print("Player \(card1 > card2 ? 1 : 2) wins round \(roundCount) of game \(gameNr)!")
                 deck1.evalRound(ownCard: card1, otherCard: card2)
                 deck2.evalRound(ownCard: card2, otherCard: card1)
             }
@@ -103,10 +118,13 @@ struct SpaceCards {
         while deck1.hasCardsLeft, deck2.hasCardsLeft {
             playRound()
         }
+        // print("The winner of game \(gameNr) is player \(deck1.hasCardsLeft ? 1 : 2)!")
     }
 
     init(decks: [Deck]) {
-        // print("=== new Game ===")
+        gameCount += 1
+        gameNr = gameCount
+        // print("=== Game \(gameNr) ===")
         deck1 = decks[0]
         deck2 = decks[1]
     }
@@ -127,6 +145,11 @@ struct SpaceCards {
 func part2() -> Int {
     var game = SpaceCards(decks: decks)
     game.play()
+
+    // print("\n\n== Post-game results ==")
+    // print("Player 1's deck: \(game.deck1)")
+    // print("Player 2's deck: \(game.deck2)")
+
     return game.winnerScore
 }
 
