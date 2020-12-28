@@ -80,7 +80,7 @@ struct SpaceCards {
         (10 ^^ (deck2.cards.count * 2)) * deck1.hashCode + deck2.hashCode
     }
 
-    mutating func playRound() {
+    mutating func playRound() throws {
         roundCount += 1
         // print("\n-- Round \(roundCount) (Game \(gameNr)) --")
         // print("Player 1's deck: \(deck1)")
@@ -90,8 +90,9 @@ struct SpaceCards {
         // print("Player 1 plays: \(card1)")
         // print("Player 2 plays: \(card2)")
         if previousRounds.contains(hashCode) {
-            // print("!!Player 1 wins round \(roundCount) of game \(gameNr)!")
+            // print("Player 1 wins round \(roundCount) of game \(gameNr)!")
             deck1.addRound(winningCard: card1, loosingCard: card2)
+            throw Utils.DefaultError.message("Round already played, Player 1 wins")
         } else {
             previousRounds.insert(hashCode)
             if deck1.cards.count >= card1, deck2.cards.count >= card2 {
@@ -116,7 +117,9 @@ struct SpaceCards {
 
     mutating func play() {
         while deck1.hasCardsLeft, deck2.hasCardsLeft {
-            playRound()
+            if (try? playRound()) == nil {
+                break
+            }
         }
         // print("The winner of game \(gameNr) is player \(deck1.hasCardsLeft ? 1 : 2)!")
     }
