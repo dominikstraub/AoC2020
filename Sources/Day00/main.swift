@@ -6,13 +6,12 @@ let input = try Utils.getInput(bundle: Bundle.module, file: "test")
 
 let lines = input
     .components(separatedBy: CharacterSet(charactersIn: "\n"))
-    .map { line -> String? in
+    .compactMap { line -> String? in
         if line == "" {
             return nil
         }
         return line
     }
-    .compactMap { $0 }
 
 func part1() -> Int {
     return -1
@@ -20,8 +19,8 @@ func part1() -> Int {
 
 print("Part 1: \(part1())")
 
-func part2() -> Int {
-    return -1
-}
+// func part2() -> Int {
+//     return -1
+// }
 
-print("Part 2: \(part2())")
+// print("Part 2: \(part2())")
