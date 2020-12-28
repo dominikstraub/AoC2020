@@ -76,8 +76,11 @@ struct CrabCups {
         }
     }
 
-    init(cups: [Int]) {
+    init(cups: [Int], fillUpTo max: Int = -1) {
         self.cups = cups
+        if max > 0 {
+            self.cups.append(contentsOf: self.cups.max()! ... max)
+        }
         currentCup = self.cups.first!
     }
 }
@@ -91,8 +94,11 @@ func part1() -> String {
 
 print("Part 1: \(part1())")
 
-// func part2() -> Int {
-//     return -1
-// }
+func part2() -> Int {
+    var game = CrabCups(cups: cups, fillUpTo: 1_000_000)
+    game.move(moves: 10_000_000)
+    let oneIndex = game.cups.firstIndex(of: 1)!
+    return game.cups[oneIndex + 1] * game.cups[oneIndex + 2]
+}
 
-// print("Part 2: \(part2())")
+print("Part 2: \(part2())")
