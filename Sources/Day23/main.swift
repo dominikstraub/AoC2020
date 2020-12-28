@@ -11,11 +11,11 @@ let cups = input
 // print(cups)
 
 struct CrabCups {
-    var cups: [Int]
+    var cups: LinkedList<Int>
     var currentCup: Int
-    var pickedUp: [Int] = []
+    var pickedUp: LinkedList<Int> = []
 
-    var currentCupIndex: Int {
+    var currentCupIndex: LinkedListIndex<Int> {
         cups.firstIndex(of: currentCup)!
     }
 
@@ -29,7 +29,7 @@ struct CrabCups {
         }
     }
 
-    var destinationCupIndex: Int {
+    var destinationCupIndex: LinkedListIndex<Int> {
         cups.firstIndex(of: destinationCup)!
     }
 
@@ -38,7 +38,7 @@ struct CrabCups {
     }
 
     var nextCupIndex: Int {
-        (currentCupIndex + 1) % cups.count
+        (currentCupIndex.tag + 1) % cups.count
     }
 
     var order: String {
@@ -46,7 +46,7 @@ struct CrabCups {
     }
 
     mutating func placeCups() {
-        cups.insert(contentsOf: pickedUp, at: destinationCupIndex + 1)
+        cups.insert(pickedUp, at: destinationCupIndex.tag + 1)
         pickedUp.removeAll()
     }
 
@@ -61,25 +61,29 @@ struct CrabCups {
     }
 
     mutating func move() {
-        // print("cups: \(cups)")
+        print("cups: \(cups)")
         pickUp(times: 3)
-        // print("pick up: \(pickedUp)")
-        // print("destination: \(destinationCup)")
+        print("pick up: \(pickedUp)")
+        print("destination: \(destinationCup)")
         placeCups()
         currentCup = nextCup
     }
 
     mutating func move(moves: Int) {
-        for _ in 0 ..< moves {
-            // print("\n-- move \(moveNr + 1) --")
+        for moveNr in 0 ..< moves {
+            print("\n-- move \(moveNr + 1) --")
             move()
         }
     }
 
     init(cups: [Int], fillUpTo max: Int = -1) {
-        self.cups = cups
+        var cups = cups
         if max > 0 {
-            self.cups.append(contentsOf: self.cups.max()! ... max)
+            cups.append(contentsOf: cups.max()! ... max)
+        }
+        self.cups = LinkedList<Int>()
+        for entry in cups {
+            self.cups.append(entry)
         }
         currentCup = self.cups.first!
     }
@@ -98,7 +102,7 @@ func part2() -> Int {
     var game = CrabCups(cups: cups, fillUpTo: 1_000_000)
     game.move(moves: 10_000_000)
     let oneIndex = game.cups.firstIndex(of: 1)!
-    return game.cups[oneIndex + 1] * game.cups[oneIndex + 2]
+    return game.cups[oneIndex.tag + 1] * game.cups[oneIndex.tag + 2]
 }
 
 print("Part 2: \(part2())")
