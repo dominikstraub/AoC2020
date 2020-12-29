@@ -11,7 +11,7 @@ let cups = input
 // print(cups)
 
 struct CrabCups {
-    var cups: LinkedList<Int>
+    var cups: LinkedList<Int> = []
     var currentCup: Int
     var pickedUp: LinkedList<Int> = []
 
@@ -61,6 +61,7 @@ struct CrabCups {
     }
 
     mutating func move() {
+        // print(cups.prettyPrint)
         print("cups: \(cups)")
         pickUp(times: 3)
         print("pick up: \(pickedUp)")
@@ -81,7 +82,6 @@ struct CrabCups {
         if max > 0 {
             cups.append(contentsOf: cups.max()! ... max)
         }
-        self.cups = LinkedList<Int>()
         for entry in cups {
             self.cups.append(entry)
         }
@@ -92,7 +92,8 @@ struct CrabCups {
 func part1() -> String {
     var game = CrabCups(cups: cups)
     game.move(moves: 100)
-    // print(game.cups)
+    // print(game.cups.prettyPrint)
+    print(game.cups)
     return game.order
 }
 

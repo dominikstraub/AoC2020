@@ -161,9 +161,9 @@ public final class LinkedList<T> {
 
             prev.next = list.head
             list.head?.previous = prev
-
-            list.last?.next = next
-            next?.previous = list.last
+            let last = list.last
+            last?.next = next
+            next?.previous = last
         }
     }
 
@@ -207,6 +207,30 @@ public final class LinkedList<T> {
     @discardableResult public func remove(at index: Int) -> T {
         let node = self.node(at: index)
         return remove(node: node)
+    }
+
+    public var prettyPrint: String {
+        var s = ""
+        var node = head
+        var prefixPadding = ""
+        while let nd = node {
+            s += prefixPadding
+            if let previous = nd.previous?.value {
+                s += "\(previous) "
+            } else {
+                s += ". "
+            }
+            s += "\(nd.value)"
+            if let next = nd.next?.value {
+                s += " \(next)"
+            } else {
+                s += " ."
+            }
+            node = nd.next
+            if node != nil { s += "\n" }
+            prefixPadding += "  "
+        }
+        return s
     }
 }
 

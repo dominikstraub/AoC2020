@@ -49,3 +49,7 @@ public func ^^ (radix: Int, power: Int) -> Double {
 public enum DefaultError: Error {
     case message(String)
 }
+
+public func print(string: String) {
+    Swift.print(string)
+}
