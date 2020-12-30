@@ -8,50 +8,49 @@ let cups = input
     .components(separatedBy: "\n")[0]
     .compactMap { Int(String($0)) }
 
-// print(cups)
-
 struct CrabCups {
     var cups: LinkedList<Int> = []
-    var currentCup: Int
+    var currentCup: LinkedList<Int>.Node
     var pickedUp: LinkedList<Int> = []
 
-    var currentCupIndex: LinkedListIndex<Int> {
-        cups.firstIndex(of: currentCup)!
-    }
+    var cupsMap: [Int: LinkedList<Int>.Node] = [:]
+    let max: Int
 
-    var destinationCup: Int {
-        var destinationCup = currentCup
+    var destinationCup: LinkedList<Int>.Node {
+        var destinationValue = currentCup.value
         while true {
-            destinationCup = (destinationCup - 1) %% (cups.max()! + 1)
-            if cups.contains(destinationCup) {
-                return destinationCup
+            destinationValue = (destinationValue - 1) %% (max + 1)
+            if destinationValue != 0, !pickedUp.contains(destinationValue) {
+                return cupsMap[destinationValue]!
             }
         }
     }
 
-    var destinationCupIndex: LinkedListIndex<Int> {
-        cups.firstIndex(of: destinationCup)!
-    }
-
-    var nextCup: Int {
-        cups[nextCupIndex]
-    }
-
-    var nextCupIndex: Int {
-        (currentCupIndex.tag + 1) % cups.count
+    var nextCup: LinkedList<Int>.Node {
+        if let next = currentCup.next {
+            return next
+        } else {
+            return cups.head!
+        }
     }
 
     var order: String {
-        cups.split(separator: 1).reversed().map { $0.map { "\($0)" }.joined() }.joined()
+        var result = ""
+        var currentNode = cupsMap[1]!.next
+        while let node = currentNode, node.value != 1 {
+            result += "\(node.value)"
+            currentNode = node.next ?? cups.head
+        }
+        return result
     }
 
     mutating func placeCups() {
-        cups.insert(pickedUp, at: destinationCupIndex.tag + 1)
+        cups.insert(pickedUp, after: destinationCup)
         pickedUp.removeAll()
     }
 
     mutating func pickUp() {
-        pickedUp.append(cups.remove(at: nextCupIndex))
+        pickedUp.append(cups.remove(node: nextCup))
     }
 
     mutating func pickUp(times: Int) {
@@ -62,17 +61,22 @@ struct CrabCups {
 
     mutating func move() {
         // print(cups.prettyPrint)
-        print("cups: \(cups)")
+        // print("cups: \(cups)")
+        // print(cups.count)
         pickUp(times: 3)
-        print("pick up: \(pickedUp)")
-        print("destination: \(destinationCup)")
+        // print(pickedUp.prettyPrint)
+        // print("pick up: \(pickedUp)")
+        // print(pickedUp.count)
+        // print("destination: \(destinationCup)")
         placeCups()
         currentCup = nextCup
     }
 
     mutating func move(moves: Int) {
         for moveNr in 0 ..< moves {
-            print("\n-- move \(moveNr + 1) --")
+            if moveNr % 100_000 == 0 {
+                print("\n-- move \(moveNr + 1) --")
+            }
             move()
         }
     }
@@ -83,9 +87,10 @@ struct CrabCups {
             cups.append(contentsOf: cups.max()! ... max)
         }
         for entry in cups {
-            self.cups.append(entry)
+            cupsMap[entry] = self.cups.append(entry)
         }
-        currentCup = self.cups.first!
+        self.max = self.cups.max()!
+        currentCup = self.cups.head!
     }
 }
 
@@ -93,17 +98,21 @@ func part1() -> String {
     var game = CrabCups(cups: cups)
     game.move(moves: 100)
     // print(game.cups.prettyPrint)
-    print(game.cups)
+    // print(game.cups)
     return game.order
 }
 
 print("Part 1: \(part1())")
 
-func part2() -> Int {
+func part2() -> Double {
     var game = CrabCups(cups: cups, fillUpTo: 1_000_000)
     game.move(moves: 10_000_000)
-    let oneIndex = game.cups.firstIndex(of: 1)!
-    return game.cups[oneIndex.tag + 1] * game.cups[oneIndex.tag + 2]
+    let oneCup = game.cupsMap[1]!
+    let nextCup = oneCup.next!
+    let nextNextCup = nextCup.next!
+    print(nextCup.value)
+    print(nextNextCup.value)
+    return Double(nextCup.value) * Double(nextNextCup.value)
 }
 
 print("Part 2: \(part2())")
