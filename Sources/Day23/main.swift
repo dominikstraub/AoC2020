@@ -73,9 +73,9 @@ struct CrabCups {
     }
 
     mutating func move(moves: Int) {
-        for moveNr in 0 ..< moves {
+        for moveNr in 1 ... moves {
             if moveNr % 100_000 == 0 {
-                print("\n-- move \(moveNr + 1) --")
+                print("\n-- move \(moveNr) --")
             }
             move()
         }
@@ -84,7 +84,7 @@ struct CrabCups {
     init(cups: [Int], fillUpTo max: Int = -1) {
         var cups = cups
         if max > 0 {
-            cups.append(contentsOf: cups.max()! ... max)
+            cups.append(contentsOf: cups.max()! + 1 ... max)
         }
         for entry in cups {
             cupsMap[entry] = self.cups.append(entry)
@@ -112,7 +112,9 @@ func part2() -> Double {
     let nextNextCup = nextCup.next!
     print(nextCup.value)
     print(nextNextCup.value)
-    return Double(nextCup.value) * Double(nextNextCup.value)
+    let result = Double(nextCup.value) * Double(nextNextCup.value)
+    print(result)
+    return result
 }
 
 print("Part 2: \(part2())")
